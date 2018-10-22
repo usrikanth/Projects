@@ -15,6 +15,7 @@ from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
 from keras.utils import np_utils
 from keras.preprocessing.sequence import pad_sequences
+from keras.utils.vis_utils import plot_model
 from sklearn.preprocessing import LabelEncoder
 
 #max number of unique words should be in the order of 20 - 50K using 5000 here
@@ -43,8 +44,8 @@ def genData():
             X.append(row[0])
             Y.append(row[1])
             line_count += 1
-          
-
+        print("actual vocab size",len(set(X)))  
+        output_size = len(set(Y))
         #encode the vocab
         encoded_X = [one_hot(d, vocab_size) for d in X]
         padded_X = pad_sequences(encoded_X, maxlen=max_len, padding="post")
@@ -70,7 +71,7 @@ def genData():
                 X_test.append(padded_X[i])
                 Y_test.append(Y_one_hot[i])
                 test_count = test_count+1
-    return X_train, Y_train, X_test, Y_test
+    return X_train, Y_train, X_test, Y_test, output_size
 
 
 # In[43]:
@@ -78,8 +79,9 @@ def genData():
 
 #main code 
 #get data
-X_train, Y_train, X_test, Y_test = genData()
-print(X_train[10],", ", Y_train[10])
+X_train, Y_train, X_test, Y_test, output_size = genData()
+print("Sample X and Y: ",X_train[10],", ", Y_train[10])
+print("output size ", output_size)
 
 
 # In[47]:
@@ -87,18 +89,21 @@ print(X_train[10],", ", Y_train[10])
 
 #build model
 
-
-
 encode_dim = 32
-model = Sequential()
+model = Sequential(max_len)
+
+#add embedding layer
 model.add(Embedding(vocab_size, encode_dim, input_length=max_len))
 
-#LSTM layer size
+#add LSTM layer
 
-hidden_units_size = 100
+hidden_units_size = 40
 model.add(LSTM(hidden_units_size, return_sequences=False))
-model.add(TimeDistributed(Dense(vocab_size)))
-model.add(Activation('softmax'))
+
+
+model.add(Dense(output_size, activation='softmax'))
+
+#compile the model with categorical cross entropy
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_accuracy'])
 print(model.summary())
 
@@ -107,10 +112,11 @@ print(model.summary())
 
 
 #run the model
-
+'''
 # fit the model
-model.fit(padded_docs, labels, epochs=50, verbose=0)
+model.fit(X_train, Y_train, epochs=5, verbose=0)
 # evaluate the model
-loss, accuracy = model.evaluate(padded_docs, labels, verbose=0)
+loss, accuracy = model.evaluate(X_test, Y_test, verbose=0)
 print('Accuracy: %f' % (accuracy*100))
 
+'''
