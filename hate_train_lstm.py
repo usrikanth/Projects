@@ -24,7 +24,7 @@ vocab_size = 5000
 
 #maximum number of words in a query/X
 
-max_len = 8
+max_len = 50
 
 #Read data
 def genData():
@@ -82,26 +82,23 @@ def genData():
 X_train, Y_train, X_test, Y_test, output_size = genData()
 print("Sample X and Y: ",X_train[10],", ", Y_train[10])
 print("output size ", output_size)
-
+X_train = np.array(X_train)
+Y_train = np.array(Y_train)
+X_test = np.array(X_test)
+Y_test = np.array(Y_test)
 
 # In[47]:
 
 
 #build model
 
-encode_dim = 32
-model = Sequential(max_len)
 
-#add embedding layer
-model.add(Embedding(vocab_size, encode_dim, input_length=max_len))
-
-#add LSTM layer
-
-hidden_units_size = 40
-model.add(LSTM(hidden_units_size, return_sequences=False))
-
-
-model.add(Dense(output_size, activation='softmax'))
+## Network architecture
+encode_dim = 100
+model = Sequential()
+model.add(Embedding(20000, 100, input_length=50))
+model.add(LSTM(100, dropout=0.2, recurrent_dropout=0.2))
+model.add(Dense(6, activation='softmax'))
 
 #compile the model with categorical cross entropy
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_accuracy'])
@@ -112,11 +109,11 @@ print(model.summary())
 
 
 #run the model
-'''
+print('X_train.shape: ',X_train.shape, ' Y_train.shape: ',Y_train.shape)
 # fit the model
-model.fit(X_train, Y_train, epochs=5, verbose=0)
+model.fit(X_train, Y_train, epochs=10, verbose=1)
 # evaluate the model
 loss, accuracy = model.evaluate(X_test, Y_test, verbose=0)
 print('Accuracy: %f' % (accuracy*100))
 
-'''
+
